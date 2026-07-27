@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Singapore Urban Traffic System</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.2/mapbox-gl.css" rel="stylesheet" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- Map container is the computational canvas for all geospatial rendering. -->
+    <div id="map" aria-label="Singapore traffic map"></div>
+
+    <section class="hud-panel" aria-live="polite">
+      <h1>Singapore Urban System</h1>
+      <p id="system-status">Initializing...</p>
+    </section>
+
+    <section class="layer-panel" aria-label="Layer visibility controls">
+      <h2>Layer Controls</h2>
+      <button id="toggle-basemap" class="layer-toggle is-on" type="button" aria-pressed="true">
+        Basemap: ON
+      </button>
+      <button id="toggle-roads" class="layer-toggle is-on" type="button" aria-pressed="true">
+        Static Roads: ON
+      </button>
+      <button id="toggle-live" class="layer-toggle is-on" type="button" aria-pressed="true">
+        Live Traffic: ON
+      </button>
+    </section>
+
+    <!-- Minimal hover tooltip hook for phase-2 interaction extension. -->
+    <div id="traffic-tooltip" class="tooltip hidden" role="tooltip"></div>
+
+    <aside id="camera-window" class="camera-window hidden" aria-live="polite" aria-label="Traffic camera viewer">
+      <div class="camera-window-header">
+        <h3 id="camera-window-title">Camera Viewer</h3>
+        <button id="camera-window-close" class="camera-window-close" type="button" aria-label="Close camera viewer">
+          Close
+        </button>
+      </div>
+      <p id="camera-window-meta" class="camera-window-meta">Click a camera point to open a feed.</p>
+      <div id="camera-window-body" class="camera-window-body"></div>
+    </aside>
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.2/mapbox-gl.js"></script>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
+
+<!--
+Explanation:
+- Responsibility: Declare the map viewport and minimal UI shell.
+- Data flow: Browser loads this HTML -> loads JS modules -> JS drives live map state.
+- Dependencies: Mapbox GL JS CDN, local frontend modules.
+
+Beginner check-in questions:
+- Why keep UI minimal for an infrastructural systems map?
+- Why render geospatial layers in a dedicated map container?
+- What part of this file would change if we added a side analytics panel?
+-->
