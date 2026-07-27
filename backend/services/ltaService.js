@@ -330,7 +330,7 @@ function normalizeTrafficImages(items) {
       return {
         id: item.CameraID || `camera-${index}`,
         cameraId: item.CameraID || `camera-${index}`,
-        imageUrl: item.ImageLink || '',
+        imageUrl: item.ImageLink || item.ImageURL || item.ImageUrl || item.Url || '',
         location: item.Location || item.CameraID || 'Traffic camera',
         coordinates,
         timestamp: item.Timestamp || new Date().toISOString()
@@ -491,14 +491,18 @@ async function getImagesNear({ lon, lat, radiusKm = 2, limit = 3 }) {
     return images.slice(0, limit);
   }
 
-  return images
+  const rankedImages = images
     .map((image) => ({
       ...image,
       distanceKm: haversineDistanceKm(point, image.coordinates)
     }))
-    .filter((image) => image.distanceKm <= radiusKm)
     .sort((a, b) => a.distanceKm - b.distanceKm)
-    .slice(0, limit);
+    .filter((image) => image.distanceKm <= radiusKm);
+
+  return (rankedImages.length > 0 ? rankedImages : images.map((image) => ({
+    ...image,
+    distanceKm: haversineDistanceKm(point, image.coordinates)
+  })).sort((a, b) => a.distanceKm - b.distanceKm)).slice(0, limit);
 }
 
 async function getTrafficSnapshot() {

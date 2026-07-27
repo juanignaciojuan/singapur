@@ -517,18 +517,29 @@ export function createTrafficLayerController(map) {
   function enableTrafficHoverHooks({ onHover, onLeave }) {
     removeTrafficHoverHooks();
 
-    const moveHandler = (event) => {
+    const enterHandler = (event) => {
       const feature = event.features && event.features[0];
 
       if (!feature) {
-        if (onLeave) {
-          onLeave();
-        }
-        map.getCanvas().style.cursor = '';
         return;
       }
 
       map.getCanvas().style.cursor = 'crosshair';
+
+      if (onHover) {
+        onHover({
+          feature,
+          lngLat: event.lngLat
+        });
+      }
+    };
+
+    const moveHandler = (event) => {
+      const feature = event.features && event.features[0];
+
+      if (!feature) {
+        return;
+      }
 
       if (onHover) {
         onHover({
@@ -546,9 +557,11 @@ export function createTrafficLayerController(map) {
     };
 
     [SPEED_LINE_LAYER_ID, SPEED_POINT_LAYER_ID].forEach((layerId) => {
+      map.on('mouseenter', layerId, enterHandler);
       map.on('mousemove', layerId, moveHandler);
       map.on('mouseleave', layerId, leaveHandler);
 
+      state.trafficHoverHandlers.push({ event: 'mouseenter', layerId, fn: enterHandler });
       state.trafficHoverHandlers.push({ event: 'mousemove', layerId, fn: moveHandler });
       state.trafficHoverHandlers.push({ event: 'mouseleave', layerId, fn: leaveHandler });
     });
@@ -557,18 +570,29 @@ export function createTrafficLayerController(map) {
   function enableCameraHoverHooks({ onHover, onLeave }) {
     removeCameraHoverHooks();
 
+    const enterHandler = (event) => {
+      const feature = event.features && event.features[0];
+
+      if (!feature) {
+        return;
+      }
+
+      map.getCanvas().style.cursor = 'pointer';
+
+      if (onHover) {
+        onHover({
+          feature,
+          lngLat: event.lngLat
+        });
+      }
+    };
+
     const moveHandler = (event) => {
       const feature = event.features && event.features[0];
 
       if (!feature) {
-        if (onLeave) {
-          onLeave();
-        }
-        map.getCanvas().style.cursor = '';
         return;
       }
-
-      map.getCanvas().style.cursor = 'crosshair';
 
       if (onHover) {
         onHover({
@@ -586,9 +610,11 @@ export function createTrafficLayerController(map) {
     };
 
     [CAMERA_LAYER_ID, CAMERA_HALO_LAYER_ID].forEach((layerId) => {
+      map.on('mouseenter', layerId, enterHandler);
       map.on('mousemove', layerId, moveHandler);
       map.on('mouseleave', layerId, leaveHandler);
 
+      state.cameraHoverHandlers.push({ event: 'mouseenter', layerId, fn: enterHandler });
       state.cameraHoverHandlers.push({ event: 'mousemove', layerId, fn: moveHandler });
       state.cameraHoverHandlers.push({ event: 'mouseleave', layerId, fn: leaveHandler });
     });
@@ -597,7 +623,7 @@ export function createTrafficLayerController(map) {
   function enableCameraClickHooks({ onClick }) {
     removeCameraClickHooks();
 
-    const moveHandler = () => {
+    const enterHandler = () => {
       map.getCanvas().style.cursor = 'pointer';
     };
 
@@ -618,11 +644,11 @@ export function createTrafficLayerController(map) {
     };
 
     [CAMERA_LAYER_ID, CAMERA_HALO_LAYER_ID].forEach((layerId) => {
-      map.on('mousemove', layerId, moveHandler);
+      map.on('mouseenter', layerId, enterHandler);
       map.on('mouseleave', layerId, leaveHandler);
       map.on('click', layerId, clickHandler);
 
-      state.cameraClickHandlers.push({ event: 'mousemove', layerId, fn: moveHandler });
+      state.cameraClickHandlers.push({ event: 'mouseenter', layerId, fn: enterHandler });
       state.cameraClickHandlers.push({ event: 'mouseleave', layerId, fn: leaveHandler });
       state.cameraClickHandlers.push({ event: 'click', layerId, fn: clickHandler });
     });

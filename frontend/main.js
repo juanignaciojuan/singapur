@@ -2,7 +2,8 @@ import {
   fetchAppConfig,
   fetchRoadNetwork,
   fetchTrafficSnapshot,
-  fetchTrafficImages
+  fetchTrafficImages,
+  fetchTrafficImagesNear
 } from './api.js';
 import { createBaseMap, waitForMapReady } from './map.js';
 import { createTrafficLayerController } from './trafficLayer.js';
@@ -26,6 +27,7 @@ let trafficController = null;
 let pollTimerId = null;
 let pollInFlight = false;
 let activeTooltipLngLat = null;
+let hoverCameraRequestId = 0;
 let baseLayerIds = [];
 
 const viewState = {
@@ -249,6 +251,7 @@ function renderTooltip({ lngLat, title, status, body, imageUrl }) {
 }
 
 function hideTooltip() {
+  hoverCameraRequestId += 1;
   activeTooltipLngLat = null;
   setTooltipVisibility(false);
 }
@@ -297,19 +300,52 @@ function startPolling(intervalMs) {
 
 function registerTrafficHoverHooks() {
   trafficController.enableTrafficHoverHooks({
-    onHover: ({ feature, lngLat }) => {
+    onHover: async ({ feature, lngLat }) => {
       const props = feature.properties || {};
       const location = props.location || props.roadName || 'Road segment';
       const status = props.status || 'unknown';
       const message = props.message || 'No incident note';
+
+      const requestId = ++hoverCameraRequestId;
 
       renderTooltip({
         lngLat,
         title: location,
         status,
         body: message,
-        imageUrl: null
+        imageUrl: ''
       });
+
+      try {
+        const cameraPayload = await fetchTrafficImagesNear({
+          lon: lngLat.lng,
+          lat: lngLat.lat,
+          radiusKm: 2,
+          limit: 1
+        });
+
+        if (requestId !== hoverCameraRequestId || !activeTooltipLngLat) {
+          return;
+        }
+
+        const camera = Array.isArray(cameraPayload.images) ? cameraPayload.images[0] : null;
+
+        renderTooltip({
+          lngLat,
+          title: location,
+          status,
+          body: camera
+            ? `${message} | nearest camera: ${camera.location || camera.cameraId || 'Traffic camera'}`
+            : message,
+          imageUrl: camera?.imageUrl || ''
+        });
+      } catch (error) {
+        if (requestId !== hoverCameraRequestId || !activeTooltipLngLat) {
+          return;
+        }
+
+        console.error('Camera preview lookup failed:', error);
+      }
     },
     onLeave: () => {
       hideTooltip();
